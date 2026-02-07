@@ -150,6 +150,24 @@ class ConsensusManager {
             showToast(`✅ Your rumor was verified! +${CONFIG.MIN_POST_STAKE}⭐`, 'success');
         }
     }
+
+    async finalizeRumor(rumorId) {
+        // DEMO FEATURE: Force finalize a rumor immediately
+        console.log('Force finalizing rumor:', rumorId);
+
+        // 1. Seal it immediately
+        await this.sealRumor(rumorId, 'timeout'); // Treat as timeout (count votes)
+
+        // 2. Notify
+        showToast('Rumor verified/finalized! 🏁', 'success');
+
+        // 3. Refresh UI
+        setTimeout(() => {
+            renderFeed();
+        }, 500);
+
+        return true;
+    }
 }
 
 // Global consensus manager

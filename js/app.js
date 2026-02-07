@@ -69,6 +69,7 @@ class App {
 
         postBtn.addEventListener('click', async () => {
             const content = rumorInput.value.trim();
+            const duration = parseInt(document.getElementById('rumorDuration')?.value) || 24;
 
             if (!content) {
                 showToast('Please enter rumor content', 'error');
@@ -76,7 +77,7 @@ class App {
             }
 
             try {
-                const rumor = await rumorManager.createRumor(content);
+                const rumor = await rumorManager.createRumor(content, duration);
 
                 // Broadcast to P2P network
                 await p2pManager.broadcastRumor(rumor);

@@ -9,7 +9,7 @@ class RumorManager {
         return this.rumors;
     }
 
-    async createRumor(content) {
+    async createRumor(content, durationHours = 24) {
         // Validate content
         if (!content || content.trim().length === 0) {
             throw new Error('Rumor content cannot be empty');
@@ -23,12 +23,16 @@ class RumorManager {
             throw new Error(`Need ${CONFIG.MIN_POST_STAKE}⭐ to post`);
         }
 
+        const timestamp = Date.now();
+        const expiresAt = timestamp + (durationHours * 60 * 60 * 1000);
+
         // Create rumor object
         const rumorData = {
             content: content.trim(),
             authorId: identityManager.getUserId(),
-            timestamp: Date.now(),
-            stake: CONFIG.MIN_POST_STAKE
+            timestamp: timestamp,
+            stake: CONFIG.MIN_POST_STAKE,
+            expiresAt: expiresAt
         };
 
         // Sign rumor
@@ -51,7 +55,7 @@ class RumorManager {
             sealed: false,
             sealedAt: null,
             outcome: null,
-            createdAt: Date.now()
+            createdAt: timestamp
         };
 
         // Stake tokens

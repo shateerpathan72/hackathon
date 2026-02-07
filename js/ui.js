@@ -14,19 +14,21 @@ function showToast(message, type = 'info') {
     }, CONFIG.TOAST_DURATION);
 }
 
-function formatTimestamp(timestamp) {
+function formatTimestamp(timestamp, isFuture = false) {
     const now = Date.now();
-    const diff = now - timestamp;
+    const diff = isFuture ? timestamp - now : now - timestamp;
+
+    if (diff < 0) return isFuture ? 'Expired' : 'Just now';
 
     const seconds = Math.floor(diff / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    if (days > 0) return `${days}d ago`;
-    if (hours > 0) return `${hours}h ago`;
-    if (minutes > 0) return `${minutes}m ago`;
-    return 'Just now';
+    if (days > 0) return `${days}d ${isFuture ? 'left' : 'ago'}`;
+    if (hours > 0) return `${hours}h ${isFuture ? 'left' : 'ago'}`;
+    if (minutes > 0) return `${minutes}m ${isFuture ? 'left' : 'ago'}`;
+    return isFuture ? 'Ending soon' : 'Just now';
 }
 
 function formatUserId(userId) {
@@ -57,7 +59,10 @@ function renderRumorCard(rumor) {
     card.innerHTML = `
         <div class="rumor-header">
             <span class="rumor-author">${formatUserId(rumor.authorId)}</span>
-            <span class="rumor-time">${formatTimestamp(rumor.timestamp)}</span>
+            <span class="rumor-time">
+                ${formatTimestamp(rumor.timestamp)} 
+                ${rumor.expiresAt && !rumor.sealed ? ` • ⏳ Ends in ${formatTimestamp(rumor.expiresAt, true)}` : ''}
+            </span>
         </div>
         
         <div class="rumor-content ${rumor.deleted ? 'tombstone' : ''}">
@@ -92,6 +97,9 @@ function renderRumorCard(rumor) {
                 ${rumor.authorId === identityManager.getUserId() && !rumor.deleted ? `
                     <button class="btn-secondary delete-btn" data-rumor-id="${rumor.id}">
                         🗑️ Delete
+                    </button>
+                    <button class="btn-secondary end-vote-btn" data-rumor-id="${rumor.id}" style="border-color: #ef4444; color: #ef4444;">
+                        ⏳ End Vote
                     </button>
                 ` : ''}
             </div>
@@ -141,6 +149,20 @@ function attachFeedListeners() {
                     await rumorManager.deleteRumor(rumorId);
                     showToast('Rumor deleted', 'info');
                     await renderFeed();
+                } catch (error) {
+                    showToast(error.message, 'error');
+                }
+            }
+        });
+    });
+
+    // End Vote buttons (Demo)
+    document.querySelectorAll('.end-vote-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const rumorId = e.target.dataset.rumorId;
+            if (confirm('Force end voting now? (Demo Feature)')) {
+                try {
+                    await consensusManager.finalizeRumor(rumorId);
                 } catch (error) {
                     showToast(error.message, 'error');
                 }
