@@ -37,11 +37,13 @@ class P2PManager {
 
             this.peer.on('error', (err) => {
                 console.error('P2P Error:', err);
-                this.updateStatus('error', 0);
 
-                if (err.type === 'unavailable-id') {
-                    showToast('P2P: ID already in use (another device?)', 'error');
+                if (err.type === 'unavailable-id' || err.type === 'peer-unavailable') {
+                    // Expected errors when connecting to stale peers - just log
+                    console.log('P2P: Peer unavailable (likely offline)');
                 } else {
+                    // Unexpected errors - show toast
+                    this.updateStatus('error', this.connections.size);
                     showToast(`P2P Error: ${err.type}`, 'error');
                 }
             });
