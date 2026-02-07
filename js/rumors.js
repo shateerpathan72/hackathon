@@ -77,7 +77,9 @@ class RumorManager {
             stake: CONFIG.MIN_POST_STAKE,
             voteWeight: reputationManager.calculateVoteWeight(CONFIG.MIN_POST_STAKE),
             timestamp: timestamp,
-            signature: signature // Reuse rumor signature or sign new one (simplification)
+            signature: signature,
+            // SYBIL DEFENSE
+            deviceId: identityManager.fingerprint
         };
         await storage.put('votes', autoVote);
         if (votingManager && votingManager.votes) {

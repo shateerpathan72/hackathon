@@ -82,22 +82,20 @@ class IdentityManager {
         ctx.font = '14px Arial';
         ctx.fillText('Rumorality', 2, 2);
         const canvasData = canvas.toDataURL();
+        try {
+            // Initialize FingerprintJS agent
+            const fpPromise = FingerprintJS.load();
+            const fp = await fpPromise;
+            const result = await fp.get();
 
-        // Combine with other browser properties
-        const fingerprint = {
-            canvas: canvasData,
-            userAgent: navigator.userAgent,
-            language: navigator.language,
-            platform: navigator.platform,
-            hardwareConcurrency: navigator.hardwareConcurrency,
-            deviceMemory: navigator.deviceMemory,
-            screenResolution: `${screen.width}x${screen.height}`,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        };
-
-        const fingerprintString = JSON.stringify(fingerprint);
-        const hash = await this.hashString(fingerprintString);
-        return this.bufferToHex(hash);
+            console.log('Device Fingerprint:', result.visitorId);
+            return result.visitorId;
+        } catch (error) {
+            console.error('Fingerprint generation failed:', error);
+            // Fallback to random ID if completely blocked (should be rare)
+            // Ideally we block access, but for demo we fallback
+            return 'fallback_' + Math.random().toString(36).substring(2);
+        }
     }
 
     async signMessage(message) {

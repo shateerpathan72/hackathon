@@ -38,6 +38,21 @@ class VotingManager {
             }
         }
 
+        // SYBIL DEFENSE: Check Device Fingerprint
+        // Ensure this device hasn't already voted on this rumor with ANY account
+        const currentDeviceId = identityManager.fingerprint;
+        const previousVotesOnRumor = this.votes.filter(v => v.rumorId === rumorId);
+
+        // We need to check if any previous vote has the same deviceId
+        // However, we didn't store deviceId in votes before.
+        // We need to start storing it.
+        // For old votes without deviceId, we can't enforce this.
+        const deviceAlreadyVoted = previousVotesOnRumor.some(v => v.deviceId === currentDeviceId);
+
+        if (deviceAlreadyVoted && CONFIG.ENABLE_FINGERPRINT) {
+            throw new Error('This device has already voted on this rumor!');
+        }
+
         // Calculate cost
         const cost = reputationManager.calculateVoteCost(numVotes);
 
@@ -59,7 +74,9 @@ class VotingManager {
             voteWeight, // NEW: Actual weighted votes
             voterReputation, // NEW: Snapshot of voter's rep at time of vote
             voterId: identityManager.getUserId(),
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            // SYBIL DEFENSE
+            deviceId: identityManager.fingerprint
         };
 
         // Sign vote
