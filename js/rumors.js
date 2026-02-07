@@ -117,8 +117,9 @@ class RumorManager {
     }
 
     calculateTrustScore(rumor) {
-        const trueVotes = rumor.votes.true.stake;
-        const falseVotes = rumor.votes.false.stake;
+        // Use WEIGHTED VOTES, not stake
+        const trueVotes = rumor.votes.true.count;
+        const falseVotes = rumor.votes.false.count;
         const totalVotes = trueVotes + falseVotes;
 
         if (totalVotes === 0) return 0.5; // Neutral

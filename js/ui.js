@@ -165,7 +165,7 @@ function openVoteModal(rumorId) {
     document.querySelectorAll('.vote-btn').forEach(btn => {
         btn.classList.remove('selected');
     });
-    document.getElementById('voteAmount').value = 1;
+    document.getElementById('voteAmount').value = 10; // Default 10 tokens
     updateVoteCost();
 
     // Show modal
@@ -180,16 +180,19 @@ function closeVoteModal() {
 }
 
 function updateVoteCost() {
-    const numVotes = parseInt(document.getElementById('voteAmount').value) || 1;
-    const cost = votingManager.getVoteCost(numVotes);
-    document.getElementById('voteCost').textContent = cost;
+    const stake = parseInt(document.getElementById('voteAmount').value) || 10;
+    const voteWeight = reputationManager.calculateVoteWeight(stake);
+
+    // Update display
+    document.getElementById('voteWeight').textContent = voteWeight.toFixed(1);
+    document.getElementById('voterRep').textContent = reputationManager.balance;
 }
 
 async function submitVote() {
     const modal = document.getElementById('voteModal');
     const rumorId = modal.dataset.rumorId;
     const direction = modal.dataset.direction;
-    const numVotes = parseInt(document.getElementById('voteAmount').value) || 1;
+    const stake = parseInt(document.getElementById('voteAmount').value) || 10;
 
     if (!rumorId || !direction) {
         showToast('Please select TRUE or FALSE', 'error');
@@ -197,12 +200,15 @@ async function submitVote() {
     }
 
     try {
+        // Calculate numVotes from stake for backwards compatibility
+        const numVotes = Math.sqrt(stake);
         const vote = await votingManager.vote(rumorId, direction, numVotes);
 
         // Broadcast to P2P network
         await p2pManager.broadcastVote(vote);
 
-        showToast(`Vote submitted! (${numVotes} votes)`, 'success');
+        const voteWeight = vote.voteWeight.toFixed(1);
+        showToast(`Vote submitted! (${stake}⭐ = ${voteWeight} weighted votes)`, 'success');
         updateBalance();
         closeVoteModal();
         await renderFeed();

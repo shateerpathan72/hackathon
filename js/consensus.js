@@ -45,14 +45,22 @@ class ConsensusManager {
             return true;
         }
 
-        // Check for supermajority (66%)
-        const trueStake = rumor.votes.true.stake;
-        const falseStake = rumor.votes.false.stake;
-        const totalStake = trueStake + falseStake;
+        // Check for supermajority (66%) - use WEIGHTED VOTES, not just stake
+        const trueVotes = rumor.votes.true.count; // Now using weighted votes
+        const falseVotes = rumor.votes.false.count;
+        const totalVotes = trueVotes + falseVotes;
 
-        if (totalStake > 0) {
-            const trueRatio = trueStake / totalStake;
-            const falseRatio = falseStake / totalStake;
+        if (totalVotes > 0) {
+            const trueRatio = trueVotes / totalVotes;
+            const falseRatio = falseVotes / totalVotes;
+
+            console.log('Consensus check:', {
+                rumorId: rumorId.substring(0, 8),
+                trueVotes: trueVotes.toFixed(2),
+                falseVotes: falseVotes.toFixed(2),
+                trueRatio: (trueRatio * 100).toFixed(1) + '%',
+                supermajority: (CONFIG.SUPERMAJORITY_THRESHOLD * 100) + '%'
+            });
 
             if (trueRatio >= CONFIG.SUPERMAJORITY_THRESHOLD) {
                 await this.sealRumor(rumorId, 'true');
@@ -70,14 +78,14 @@ class ConsensusManager {
         const rumor = await rumorManager.getRumor(rumorId);
         if (!rumor) return;
 
-        // Determine outcome if timeout
+        // Determine outcome if timeout - use WEIGHTED VOTES
         if (outcome === 'timeout') {
-            const trueStake = rumor.votes.true.stake;
-            const falseStake = rumor.votes.false.stake;
+            const trueVotes = rumor.votes.true.count;
+            const falseVotes = rumor.votes.false.count;
 
-            if (trueStake > falseStake) {
+            if (trueVotes > falseVotes) {
                 outcome = 'true';
-            } else if (falseStake > trueStake) {
+            } else if (falseVotes > trueVotes) {
                 outcome = 'false';
             } else {
                 outcome = 'tie'; // No consensus

@@ -75,11 +75,12 @@
             </div>
 
             <div class="vote-stake">
-                <label for="voteAmount">Number of Votes (Cost = Votes²)</label>
-                <input type="number" id="voteAmount" min="1" max="100" value="1">
+                <label for="voteAmount">Stake Tokens (Your Rep: <span id="voterRep">100</span>⭐)</label>
+                <input type="number" id="voteAmount" min="1" max="1000" value="10" step="5">
                 <p class="cost-display">
-                    Cost: <span id="voteCost">1</span>⭐
+                    Vote Weight: ~<span id="voteWeight">3.2</span> votes
                 </p>
+                <p class="help-text">Higher reputation = more weight per token</p>
             </div>
 
             <button class="btn-primary" id="confirmVoteBtn">
