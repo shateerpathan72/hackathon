@@ -134,19 +134,31 @@ class IdentityManager {
             const data = await response.json();
             const ip = data.ip;
 
-            // Hash the IP to respect basic privacy (we store hash, not raw IP)
+            // COMPOSITE FINGERPRINT (Heuristic)
+            // Combine IP with hardware traits to distinguish devices on same WiFi
+            // but link browsers on the same device.
+            const components = [
+                ip,                              // Network
+                navigator.platform,              // OS (e.g. Win32, MacIntel)
+                screen.width + 'x' + screen.height, // Screen Resolution (Hardware)
+                navigator.hardwareConcurrency || 1, // CPU Cores
+                navigator.deviceMemory || 'unknown' // RAM (if available)
+            ];
+
+            const compositeString = components.join('|') + "RUMORALITY_SALT";
+
+            // Hash the composite string
             const encoder = new TextEncoder();
-            const dataBuffer = encoder.encode(ip + "RUMORALITY_SALT"); // Simple salt
+            const dataBuffer = encoder.encode(compositeString);
             const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-            console.log('IP Hash generated:', hashHex.substring(0, 8) + '...');
+            console.log('Network-Device Hash:', hashHex.substring(0, 8) + '...');
             return hashHex;
         } catch (error) {
             console.error('Failed to fetch/hash IP:', error);
-            // Fallback: If IP fetch fails (e.g. adblock), we can't use IP defense.
-            // Return null so we rely on FingerprintJS as backup.
+            // Fallback: If IP fetch fails, return null (rely on FingerprintJS)
             return null;
         }
     }
