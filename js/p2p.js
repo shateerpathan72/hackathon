@@ -347,8 +347,14 @@ class P2PManager {
     }
 
     async broadcastRumor(rumor) {
+        console.log('P2P: broadcastRumor called', {
+            isConnected: this.isConnected,
+            connectionCount: this.connections.size,
+            rumorId: rumor.id
+        });
+
         if (!this.isConnected || this.connections.size === 0) {
-            console.log('P2P: No peers to broadcast to');
+            console.warn('P2P: No peers to broadcast to');
             return;
         }
 
@@ -359,11 +365,18 @@ class P2PManager {
         };
 
         this.broadcast(message);
+        console.log('P2P: Rumor broadcast complete');
     }
 
     async broadcastVote(vote) {
+        console.log('P2P: broadcastVote called', {
+            isConnected: this.isConnected,
+            connectionCount: this.connections.size,
+            voteId: vote.id
+        });
+
         if (!this.isConnected || this.connections.size === 0) {
-            console.log('P2P: No peers to broadcast to');
+            console.warn('P2P: No peers to broadcast to');
             return;
         }
 
@@ -374,17 +387,30 @@ class P2PManager {
         };
 
         this.broadcast(message);
+        console.log('P2P: Vote broadcast complete');
     }
 
     broadcast(message) {
+        let successCount = 0;
+        let failCount = 0;
+
         this.connections.forEach((conn, peerId) => {
             try {
-                conn.send(message);
-                console.log('P2P: Broadcasted to', peerId);
+                if (conn.open) {
+                    conn.send(message);
+                    successCount++;
+                    console.log('P2P: Broadcasted to', peerId, 'type:', message.type);
+                } else {
+                    failCount++;
+                    console.warn('P2P: Connection not open for', peerId);
+                }
             } catch (error) {
+                failCount++;
                 console.error('P2P: Broadcast error to', peerId, error);
             }
         });
+
+        console.log(`P2P: Broadcast summary - Success: ${successCount}, Failed: ${failCount}`);
     }
 
     updateStatus(status, peerCount) {
