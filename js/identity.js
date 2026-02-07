@@ -35,9 +35,18 @@ class IdentityManager {
             // Generate new identity (only if no existing identity in IndexedDB)
             await this.generateIdentity();
         } else if (CONFIG.ENABLE_FINGERPRINT) {
+        } else if (CONFIG.ENABLE_FINGERPRINT) {
             // Verify fingerprint matches stored identity (prevent account migration)
             if (this.identity.fingerprint && this.identity.fingerprint !== this.fingerprint) {
-                throw new Error('Device mismatch! This account is bound to another device.');
+                // MIGRATION FIX: Update stored identity with new fingerprint
+                console.warn('Identity fingerprint mismatch (migration). Updating identity record.');
+                this.identity.fingerprint = this.fingerprint;
+                await storage.put('identity', this.identity);
+            } else if (!this.identity.fingerprint) {
+                // Legacy account without fingerprint - bind it now
+                console.log('Binding legacy account to this device.');
+                this.identity.fingerprint = this.fingerprint;
+                await storage.put('identity', this.identity);
             }
         }
 
