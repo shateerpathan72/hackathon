@@ -104,9 +104,12 @@ class IdentityManager {
             return result.visitorId;
         } catch (error) {
             console.error('Fingerprint generation failed:', error);
-            // Fallback to random ID if completely blocked (should be rare)
-            // Ideally we block access, but for demo we fallback
-            return 'fallback_' + Math.random().toString(36).substring(2);
+            // SYBIL DEFENSE: Do NOT return a random ID here.
+            // If we return random, Incognito users get a new ID every time -> infinite votes.
+            // Instead, return a constant "Anonymous" ID.
+            // This groups all Incognito/Blocked users into ONE identity.
+            // Result: Only ONE anonymous vote allowed per rumor worldwide.
+            return 'anonymous_device_blocked';
         }
     }
 
