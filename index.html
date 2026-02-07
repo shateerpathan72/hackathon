@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rumorality - Decentralized Campus News</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">🍥 Rumorality</h1>
+            <div class="wallet">
+                <span class="wallet-label">Reputation</span>
+                <span class="wallet-balance" id="balance">100</span>
+                <span class="wallet-icon">⭐</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Post Rumor Section -->
+        <section class="post-section">
+            <h2>Submit Anonymous Rumor</h2>
+            <div class="post-card">
+                <textarea id="rumorInput" placeholder="What's happening on campus? (280 chars max, 10⭐ stake required)"
+                    maxlength="280"></textarea>
+                <div class="post-footer">
+                    <span class="char-count" id="charCount">0/280</span>
+                    <button class="btn-primary" id="postBtn">
+                        Post Rumor (Stake 10⭐)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feed Section -->
+        <section class="feed-section">
+            <div class="feed-header">
+                <h2>Campus Feed</h2>
+                <div class="feed-controls">
+                    <button class="btn-secondary active" data-filter="all">All</button>
+                    <button class="btn-secondary" data-filter="trending">Trending</button>
+                    <button class="btn-secondary" data-filter="sealed">Sealed</button>
+                </div>
+            </div>
+
+            <div id="rumorFeed" class="rumor-feed">
+                <!-- Rumors will be dynamically inserted here -->
+                <div class="empty-state">
+                    <p>🌟 No rumors yet. Be the first to post!</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Voting Modal -->
+    <div id="voteModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Vote on Rumor</h3>
+            <p id="modalRumorText" class="modal-rumor"></p>
+
+            <div class="vote-options">
+                <button class="vote-btn vote-true" data-vote="true">
+                    ✅ TRUE
+                </button>
+                <button class="vote-btn vote-false" data-vote="false">
+                    ❌ FALSE
+                </button>
+            </div>
+
+            <div class="vote-stake">
+                <label for="voteAmount">Number of Votes (Cost = Votes²)</label>
+                <input type="number" id="voteAmount" min="1" max="100" value="1">
+                <p class="cost-display">
+                    Cost: <span id="voteCost">1</span>⭐
+                </p>
+            </div>
+
+            <button class="btn-primary" id="confirmVoteBtn">
+                Confirm Vote
+            </button>
+        </div>
+    </div>
+
+    <!-- Settings Panel (for testing) -->
+    <div class="settings-toggle" id="settingsToggle">⚙️</div>
+    <div class="settings-panel" id="settingsPanel">
+        <h3>Testing Settings</h3>
+        <label>
+            <input type="checkbox" id="enableCooldown">
+            Enable 7-day cooldown
+        </label>
+        <label>
+            <input type="checkbox" id="enableFingerprint">
+            Enable device binding
+        </label>
+        <label>
+            <input type="checkbox" id="enableDecay">
+            Enable reputation decay
+        </label>
+        <button class="btn-secondary" id="resetApp">Reset App Data</button>
+        <button class="btn-secondary" id="addTokens">Add 100 Tokens (Testing)</button>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- P2P Status Indicator -->
+    <div class="p2p-status" id="p2pStatus">
+        <span class="status-dot"></span>
+        <span class="status-text">Offline</span>
+        <span class="peer-count">0 peers</span>
+    </div>
+
+    <!-- Scripts -->
+    <!-- PeerJS for WebRTC P2P -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+    <script src="js/config.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/identity.js"></script>
+    <script src="js/reputation.js"></script>
+    <script src="js/rumors.js"></script>
+    <script src="js/voting.js"></script>
+    <script src="js/consensus.js"></script>
+    <script src="js/p2p.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
