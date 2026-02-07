@@ -109,39 +109,69 @@ class P2PManager {
     }
 
     startPeerDiscovery() {
-        // For demo: try to connect to known peer IDs
-        // In production, this would use a discovery mechanism
+        // Register ourselves in the peer registry
+        this.registerPeer();
 
-        // Try connecting to peers every 10 seconds
+        // Try connecting to peers every 5 seconds
         setInterval(() => {
             if (!this.isConnected) return;
 
-            // Try connecting to potential peers (other user IDs)
-            // This is a simple discovery - in production, use a proper discovery service
-            const potentialPeers = this.generatePotentialPeerIds();
+            // Get all registered peers
+            const potentialPeers = this.getRegisteredPeers();
 
             potentialPeers.forEach(peerId => {
                 if (!this.connections.has(peerId) && peerId !== this.myPeerId) {
                     this.connectToPeer(peerId);
                 }
             });
-        }, 10000);
+        }, 5000); // Reduced to 5 seconds for faster discovery
     }
 
-    generatePotentialPeerIds() {
-        // For testing: generate some common peer IDs
-        // In production, this would query a discovery service
-        const peers = [];
+    registerPeer() {
+        // Store our peer ID in a shared registry
+        // Note: This uses localStorage which is per-origin, so it works across tabs
+        // For true cross-device discovery, we'd need a signaling server
+        try {
+            const registry = this.getPeerRegistry();
+            if (!registry.includes(this.myPeerId)) {
+                registry.push(this.myPeerId);
+                localStorage.setItem('rumorality_peer_registry', JSON.stringify(registry));
+                console.log('P2P: Registered peer', this.myPeerId);
+            }
+        } catch (error) {
+            console.error('P2P: Failed to register peer', error);
+        }
+    }
 
-        // Try to connect to peers based on rumors we've seen
+    getPeerRegistry() {
+        try {
+            const registry = localStorage.getItem('rumorality_peer_registry');
+            return registry ? JSON.parse(registry) : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    getRegisteredPeers() {
+        // Get peers from registry
+        const registryPeers = this.getPeerRegistry();
+
+        // Also try peers from rumors we've seen
+        const rumorPeers = [];
         rumorManager.rumors.forEach(rumor => {
             const authorPeerId = `rumorality-${rumor.authorId}`;
-            if (authorPeerId !== this.myPeerId) {
-                peers.push(authorPeerId);
+            if (authorPeerId !== this.myPeerId && !rumorPeers.includes(authorPeerId)) {
+                rumorPeers.push(authorPeerId);
             }
         });
 
-        return peers;
+        // Combine both sources
+        return [...new Set([...registryPeers, ...rumorPeers])];
+    }
+
+    generatePotentialPeerIds() {
+        // Deprecated - using getRegisteredPeers() instead
+        return this.getRegisteredPeers();
     }
 
     async syncWithPeer(conn) {
