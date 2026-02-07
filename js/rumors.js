@@ -67,6 +67,23 @@ class RumorManager {
         rumor.votes.true.voters.push(identityManager.getUserId());
         rumor.votes.true.voterReputation = [reputationManager.balance];
 
+        // PERSIST AUTHOR VOTE (Fix for stats)
+        const voteId = `${id}_${identityManager.getUserId()}`;
+        const autoVote = {
+            id: voteId,
+            rumorId: id,
+            voterId: identityManager.getUserId(),
+            direction: 'true',
+            stake: CONFIG.MIN_POST_STAKE,
+            voteWeight: reputationManager.calculateVoteWeight(CONFIG.MIN_POST_STAKE),
+            timestamp: timestamp,
+            signature: signature // Reuse rumor signature or sign new one (simplification)
+        };
+        await storage.put('votes', autoVote);
+        if (votingManager && votingManager.votes) {
+            votingManager.votes.push(autoVote);
+        }
+
         // Save rumor
         await storage.put('rumors', rumor);
         this.rumors.push(rumor);
