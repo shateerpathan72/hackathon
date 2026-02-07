@@ -122,6 +122,13 @@ class RumorManager {
         const falseVotes = rumor.votes.false.count;
         const totalVotes = trueVotes + falseVotes;
 
+        // Minimum threshold for verification
+        // Needs at least 3 votes to be considered "verified" or highly trusted
+        // Otherwise, return 0.5 (neutral/unverified)
+        if (totalVotes < 3) {
+            return 0.5;
+        }
+
         if (totalVotes === 0) return 0.5; // Neutral
 
         // Trust score: 0 (all false) to 1 (all true)
