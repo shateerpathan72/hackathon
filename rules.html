@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rumorality - Rules of Engagement</title>
+    <link rel="stylesheet" href="styles.css?v=2">
+    <style>
+        .rules-container {
+            max-width: 900px;
+            margin: 4rem auto;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .page-title {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #9B8BC4, #7C6FA0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .rule-card {
+            background: rgba(54, 47, 79, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(124, 111, 160, 0.2);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rule-card:hover {
+            transform: translateY(-5px);
+            border-color: #9B8BC4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .rule-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: #7C6FA0;
+        }
+
+        .rule-card h2 {
+            font-size: 1.8rem;
+            color: #fff;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .rule-icon {
+            font-size: 2rem;
+        }
+
+        .rule-text {
+            color: #cbd5e1;
+            line-height: 1.7;
+            font-size: 1.1rem;
+        }
+
+        .highlight {
+            color: #9B8BC4;
+            font-weight: 700;
+        }
+
+        .danger-text {
+            color: #ef4444;
+            font-weight: 700;
+        }
+
+        .back-nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+
+        .back-btn {
+            background: rgba(54, 47, 79, 0.8);
+            border: 1px solid rgba(124, 111, 160, 0.2);
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #7C6FA0;
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="back-nav">
+        <a href="index.html" class="back-btn">
+            ← Back to Campus
+        </a>
+    </nav>
+
+    <div class="rules-container">
+        <div class="page-header">
+            <h1 class="page-title">Rules of Engagement</h1>
+            <p style="color: #94a3b8; font-size: 1.2rem;">How to survive and thrive in the decentralized rumor mill.</p>
+        </div>
+
+        <div class="rule-card">
+            <h2><span class="rule-icon">🎭</span> 1. Absolute Anonymity</h2>
+            <p class="rule-text">
+                Your identity is cryptographically hidden. No names, no logins, no tracking.
+                Your reputation is tied to your <span class="highlight">unique browser fingerprint</span>.
+                Keep your key safe by not clearing your local storage unexpectedly.
+            </p>
+        </div>
+
+        <div class="rule-card">
+            <h2><span class="rule-icon">💸</span> 2. Skin in the Game</h2>
+            <p class="rule-text">
+                Talk is cheap, but rumors aren't. To post or vote, you must
+                <span class="highlight">stake your Reputation Tokens</span>.
+                If you tell the truth, you earn more. If you lie, you lose what you staked.
+            </p>
+        </div>
+
+        <div class="rule-card">
+            <h2><span class="rule-icon">⚖️</span> 3. The Consensus Mechanism</h2>
+            <p class="rule-text">
+                Rumors are verified by the crowd. When you vote on a rumor, you're betting on its truthfulness.
+                <br><br>
+                If the majority agrees with you, you <span class="highlight">win tokens</span>.
+                If you vote against the truth, you <span class="danger-text">lose your stake</span>.
+            </p>
+        </div>
+
+        <div class="rule-card">
+            <h2><span class="rule-icon">⚔️</span> 4. Slashing & Decay</h2>
+            <p class="rule-text">
+                <strong>Slashing:</strong> Caught lying? Your reputation is slashed. Lose enough, and you're silenced.
+                <br><br>
+                <strong>Decay:</strong> Reputation rots over time if unused. You must stay active to maintain your
+                influence.
+            </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 4rem;">
+            <a href="index.html" class="btn-primary"
+                style="display: inline-block; text-decoration: none; font-size: 1.2rem;">Accept & Enter</a>
+        </div>
+    </div>
+
+</body>
+
+</html>
