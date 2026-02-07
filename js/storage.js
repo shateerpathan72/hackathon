@@ -2,7 +2,7 @@
 class StorageManager {
     constructor() {
         this.dbName = 'RumoralityDB';
-        this.version = 1;
+        this.version = 2; // Increment version to trigger upgrade
         this.db = null;
     }
 
@@ -35,6 +35,9 @@ class StorageManager {
                     const voteStore = db.createObjectStore('votes', { keyPath: 'id' });
                     voteStore.createIndex('rumorId', 'rumorId', { unique: false });
                     voteStore.createIndex('userId', 'userId', { unique: false });
+                }
+                if (!db.objectStoreNames.contains('credibilityHistory')) {
+                    db.createObjectStore('credibilityHistory', { keyPath: 'id' });
                 }
             };
         });
