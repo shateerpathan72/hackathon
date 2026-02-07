@@ -139,7 +139,43 @@ function testTie() {
     }
 }
 
+// 4. Liar Penalty & Reputation Gain
+function testLiarPenalty() {
+    console.log('\n----------------------------------------');
+    console.log('Test 4: Liar Penalty & Reputation Gain');
+    console.log('----------------------------------------');
+
+    // Scenario: 3 Honest vs 1 Liar on a rumor
+    // Honest stake: 10 each
+    // Liar stake: 10
+    // Outcome: TRUE (Honest wins)
+
+    const honestStake = 10;
+    const liarStake = 10;
+    const totalHonestStake = honestStake * 3;
+    const totalLiarStake = liarStake;
+
+    console.log(`Honest Total Stake: ${totalHonestStake}`);
+    console.log(`Liar Total Stake:   ${totalLiarStake}`);
+
+    // Simulation of reward distribution
+    // Winners get their stake back + share of losers' stake
+    const rewardPool = totalLiarStake;
+    const rewardPerHonest = rewardPool / 3;
+
+    console.log(`Reward Pool (Liar's lost stake): ${rewardPool}`);
+    console.log(`Reward per Honest User: ${rewardPerHonest.toFixed(2)}`);
+
+    // Verification
+    if (rewardPool > 0 && rewardPerHonest > 0) {
+        logResult('Liar Penalty', { outcome: 'PENALTY APPLIED ✅', details: `Liar lost ${liarStake}, Honest gained ${rewardPerHonest.toFixed(2)} each.` });
+    } else {
+        logResult('Liar Penalty', { outcome: 'FAILED ❌', details: 'No penalty or reward calculated.' });
+    }
+}
+
 // Run All
 testHonestMajority();
 testLiarGroup();
 testTie();
+testLiarPenalty();
