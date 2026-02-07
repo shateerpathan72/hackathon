@@ -12,12 +12,16 @@ class P2PManager {
             // Create PeerJS instance with user ID as peer ID
             this.myPeerId = `rumorality-${userId}`;
 
+            // Create PeerJS instance with user ID as peer ID
+            this.myPeerId = `rumorality-${userId}`;
+
             this.peer = new Peer(this.myPeerId, {
-                debug: 2, // Show debug logs
+                debug: 2,
+                secure: true, // Force HTTPS
                 config: {
                     iceServers: [
                         { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' }
+                        { urls: 'stun:global.stun.twilio.com:3478' }
                     ]
                 }
             });
