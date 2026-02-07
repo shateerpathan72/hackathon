@@ -2,7 +2,7 @@
 // This server ONLY helps peers find each other - it doesn't control truth or store data
 
 const peers = new Map(); // peerId -> { timestamp, lastSeen }
-const PEER_TIMEOUT = 60000; // 60 seconds
+const PEER_TIMEOUT = 15000; // 15 seconds - clean up stale peers quickly
 
 export default function handler(req, res) {
     // Enable CORS
