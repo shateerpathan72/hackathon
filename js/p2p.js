@@ -288,10 +288,11 @@ class P2PManager {
     }
 
     async validateRumor(rumor) {
-        // Validate signature
+        // Validate signature - must match the exact format used when signing
         const isValid = await identityManager.verifySignature(
             {
                 content: rumor.content,
+                authorId: rumor.authorId,
                 timestamp: rumor.timestamp,
                 stake: rumor.stake
             },
@@ -300,12 +301,16 @@ class P2PManager {
         );
 
         if (!isValid) {
-            console.warn('P2P: Invalid rumor signature');
+            console.warn('P2P: Invalid rumor signature', {
+                rumorId: rumor.id,
+                authorId: rumor.authorId
+            });
             return false;
         }
 
         // Check if already exists
         if (rumorManager.rumors.some(r => r.id === rumor.id)) {
+            console.log('P2P: Rumor already exists', rumor.id);
             return false;
         }
 
