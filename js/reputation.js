@@ -126,6 +126,69 @@ class ReputationManager {
         });
     }
 
+    getCredibilityScore() {
+        // Credibility formula based on:
+        // 1. Current reputation (70% weight)
+        // 2. Account age (20% weight)
+        // 3. Voting consistency/win rate (10% weight)
+
+        const accountAge = Date.now() - identityManager.identity.createdAt;
+        const daysSinceCreation = accountAge / (24 * 60 * 60 * 1000);
+
+        // Reputation score (0-100, capped at 1000 rep)
+        const repScore = Math.min((this.balance / 1000) * 100, 100);
+
+        // Age score (0-100, maxes out at 30 days)
+        const ageScore = Math.min((daysSinceCreation / 30) * 100, 100);
+
+        // Win rate score (0-100)
+        const winRate = this.calculateWinRate();
+        const consistencyScore = winRate * 100;
+
+        // Weighted average
+        const credibility = (repScore * 0.7) + (ageScore * 0.2) + (consistencyScore * 0.1);
+
+        return Math.round(credibility);
+    }
+
+    calculateWinRate() {
+        // Calculate win rate from stake history
+        const stakes = this.history.filter(h => h.type === 'gain' || h.type === 'loss');
+        if (stakes.length === 0) return 0.5; // Neutral for new users
+
+        const wins = this.history.filter(h =>
+            h.type === 'gain' && h.reason.includes('reward')
+        ).length;
+
+        const total = this.history.filter(h =>
+            (h.type === 'gain' && h.reason.includes('reward')) ||
+            (h.type === 'loss' && h.reason.includes('Slashed'))
+        ).length;
+
+        return total > 0 ? wins / total : 0.5;
+    }
+
+    calculateVoteWeight(stake) {
+        // Base vote weight from quadratic formula: votes = sqrt(stake)
+        const baseVotes = Math.sqrt(stake);
+
+        // Reputation multiplier (logarithmic scaling)
+        // Users with higher rep get more influence
+        const repMultiplier = 1 + Math.log10(Math.max(this.balance, 100) / 100);
+
+        const weight = baseVotes * repMultiplier;
+
+        console.log('Vote weight calculation:', {
+            stake,
+            baseVotes: baseVotes.toFixed(2),
+            reputation: this.balance,
+            repMultiplier: repMultiplier.toFixed(2),
+            finalWeight: weight.toFixed(2)
+        });
+
+        return weight;
+    }
+
     getHistory() {
         return this.history.slice().reverse(); // Most recent first
     }

@@ -57,9 +57,21 @@ class RumorManager {
         // Stake tokens
         await reputationManager.stake(CONFIG.MIN_POST_STAKE, id, 'post');
 
+        // Author automatically votes TRUE with their stake (FR-06)
+        rumor.votes.true.count = 1;
+        rumor.votes.true.stake = CONFIG.MIN_POST_STAKE;
+        rumor.votes.true.voters.push(identityManager.getUserId());
+        rumor.votes.true.voterReputation = [reputationManager.balance];
+
         // Save rumor
         await storage.put('rumors', rumor);
         this.rumors.push(rumor);
+
+        console.log('Rumor created with author auto-vote TRUE:', {
+            rumorId: id,
+            authorStake: CONFIG.MIN_POST_STAKE,
+            authorId: identityManager.getUserId()
+        });
 
         return rumor;
     }
@@ -140,21 +152,32 @@ class RumorManager {
         return rumors;
     }
 
-    async updateVotes(rumorId, direction, votes, stake, voterId) {
+    async updateVotes(rumorId, direction, votes, stake, voterId, voterReputation = null) {
         const rumor = await this.getRumor(rumorId);
         if (!rumor) {
             throw new Error('Rumor not found');
         }
 
-        // Add vote
-        rumor.votes[direction].count += votes;
+        // Add vote with weighted count
+        rumor.votes[direction].count += votes; // Now using weighted votes
         rumor.votes[direction].stake += stake;
+
+        // Store voter info with reputation snapshot
         rumor.votes[direction].voters.push({
             voterId,
-            votes,
+            votes, // Weighted votes
             stake,
+            reputation: voterReputation, // NEW: Track voter's rep at vote time
             timestamp: Date.now()
         });
+
+        // Initialize reputation array if needed
+        if (!rumor.votes[direction].voterReputation) {
+            rumor.votes[direction].voterReputation = [];
+        }
+        if (voterReputation !== null) {
+            rumor.votes[direction].voterReputation.push(voterReputation);
+        }
 
         await storage.put('rumors', rumor);
 

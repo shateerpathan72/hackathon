@@ -46,12 +46,18 @@ class VotingManager {
             throw new Error(`Insufficient reputation. Need ${cost}⭐, have ${reputationManager.balance}⭐`);
         }
 
+        // Calculate vote weight based on stake and reputation
+        const voteWeight = reputationManager.calculateVoteWeight(cost);
+        const voterReputation = reputationManager.balance;
+
         // Create vote record
         const voteData = {
             rumorId,
             direction,
-            numVotes,
+            numVotes, // Keep for backwards compatibility
             stake: cost,
+            voteWeight, // NEW: Actual weighted votes
+            voterReputation, // NEW: Snapshot of voter's rep at time of vote
             voterId: identityManager.getUserId(),
             timestamp: Date.now()
         };
@@ -78,8 +84,17 @@ class VotingManager {
         await storage.put('votes', vote);
         this.votes.push(vote);
 
-        // Update rumor votes
-        await rumorManager.updateVotes(rumorId, direction, numVotes, cost, vote.voterId);
+        // Update rumor votes with weighted votes
+        await rumorManager.updateVotes(rumorId, direction, voteWeight, cost, vote.voterId, voterReputation);
+
+        console.log('Vote cast:', {
+            rumorId: rumorId.substring(0, 8),
+            direction,
+            stake: cost,
+            baseVotes: numVotes,
+            weightedVotes: voteWeight.toFixed(2),
+            voterRep: voterReputation
+        });
 
         return vote;
     }
