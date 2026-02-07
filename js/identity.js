@@ -3,12 +3,16 @@ class IdentityManager {
     constructor() {
         this.identity = null;
         this.fingerprint = null;
+        this.ipHash = null;
     }
 
     async init() {
         // CRITICAL: Generate fingerprint FIRST to prevent incognito bypass
         if (CONFIG.ENABLE_FINGERPRINT) {
             this.fingerprint = await this.getFingerprint();
+
+            // IP DEFENSE: Fetch IP Hash for cross-browser linking
+            this.ipHash = await this.getIpHash();
 
             // Check if this device already has an account bound to it (in localStorage)
             const boundFingerprint = localStorage.getItem('rumorality_device_fingerprint');
@@ -101,6 +105,16 @@ class IdentityManager {
             const result = await fp.get();
 
             console.log('Device Fingerprint:', result.visitorId);
+
+            // INCIGNITO DETECTION (Heuristic)
+            // If we are in Incognito, we force the ID to be 'anonymous_device_blocked'
+            // This prevents generating unique IDs for every Incognito session.
+            const isIncognito = await this.detectIncognito();
+            if (isIncognito) {
+                console.warn('Incognito mode detected. Blocking unique ID generation.');
+                return 'anonymous_device_blocked';
+            }
+
             return result.visitorId;
         } catch (error) {
             console.error('Fingerprint generation failed:', error);
@@ -111,6 +125,49 @@ class IdentityManager {
             // Result: Only ONE anonymous vote allowed per rumor worldwide.
             return 'anonymous_device_blocked';
         }
+    }
+
+    async getIpHash() {
+        try {
+            // Fetch public IP from a free API
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+            const ip = data.ip;
+
+            // Hash the IP to respect basic privacy (we store hash, not raw IP)
+            const encoder = new TextEncoder();
+            const dataBuffer = encoder.encode(ip + "RUMORALITY_SALT"); // Simple salt
+            const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+            console.log('IP Hash generated:', hashHex.substring(0, 8) + '...');
+            return hashHex;
+        } catch (error) {
+            console.error('Failed to fetch/hash IP:', error);
+            // Fallback: If IP fetch fails (e.g. adblock), we can't use IP defense.
+            // Return null so we rely on FingerprintJS as backup.
+            return null;
+        }
+    }
+
+    async detectIncognito() {
+        // Heuristic 1: Storage Quota
+        // Incognito mode often has a specific, lower storage quota cap (e.g. 100MB or 120MB)
+        // compared to the massive quota of normal browsing (10%+ of disk).
+        if ('storage' in navigator && 'estimate' in navigator.storage) {
+            try {
+                const { quota } = await navigator.storage.estimate();
+                // If quota is less than 150MB, it's highly likely Incognito
+                // (Normal Chrome usually gives 10s or 100s of GB)
+                if (quota < 150 * 1024 * 1024) {
+                    return true;
+                }
+            } catch (e) {
+                console.log('Quota check failed', e);
+            }
+        }
+        return false;
     }
 
     async signMessage(message) {

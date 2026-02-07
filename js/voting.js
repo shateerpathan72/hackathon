@@ -38,19 +38,25 @@ class VotingManager {
             }
         }
 
-        // SYBIL DEFENSE: Check Device Fingerprint
+        // SYBIL DEFENSE: Check Device Fingerprint AND IP Hash
         // Ensure this device hasn't already voted on this rumor with ANY account
         const currentDeviceId = identityManager.fingerprint;
+        const currentIpHash = identityManager.ipHash;
+
         const previousVotesOnRumor = this.votes.filter(v => v.rumorId === rumorId);
 
-        // We need to check if any previous vote has the same deviceId
-        // However, we didn't store deviceId in votes before.
-        // We need to start storing it.
-        // For old votes without deviceId, we can't enforce this.
+        // Check 1: Fingerprint (same browser)
         const deviceAlreadyVoted = previousVotesOnRumor.some(v => v.deviceId === currentDeviceId);
 
-        if (deviceAlreadyVoted && CONFIG.ENABLE_FINGERPRINT) {
-            throw new Error('This device has already voted on this rumor!');
+        // Check 2: IP Hash (cross-browser/incognito)
+        // Only valid if we successfully fetched an IP hash
+        let ipAlreadyVoted = false;
+        if (currentIpHash) {
+            ipAlreadyVoted = previousVotesOnRumor.some(v => v.ipHash === currentIpHash);
+        }
+
+        if ((deviceAlreadyVoted || ipAlreadyVoted) && CONFIG.ENABLE_FINGERPRINT) {
+            throw new Error('This device/network has already voted on this rumor!');
         }
 
         // Calculate cost
@@ -76,7 +82,10 @@ class VotingManager {
             voterId: identityManager.getUserId(),
             timestamp: Date.now(),
             // SYBIL DEFENSE
-            deviceId: identityManager.fingerprint
+            timestamp: Date.now(),
+            // SYBIL DEFENSE
+            deviceId: identityManager.fingerprint,
+            ipHash: identityManager.ipHash
         };
 
         // Sign vote

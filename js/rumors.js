@@ -79,7 +79,8 @@ class RumorManager {
             timestamp: timestamp,
             signature: signature,
             // SYBIL DEFENSE
-            deviceId: identityManager.fingerprint
+            deviceId: identityManager.fingerprint,
+            ipHash: identityManager.ipHash
         };
         await storage.put('votes', autoVote);
         if (votingManager && votingManager.votes) {
