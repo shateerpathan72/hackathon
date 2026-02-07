@@ -82,10 +82,10 @@ class VotingManager {
             voterId: identityManager.getUserId(),
             timestamp: Date.now(),
             // SYBIL DEFENSE
-            timestamp: Date.now(),
-            // SYBIL DEFENSE
             deviceId: identityManager.fingerprint,
-            ipHash: identityManager.ipHash
+            ipHash: identityManager.ipHash,
+            // KEY PROPAGATION (Required for validation since ID != Key)
+            publicKey: identityManager.identity.publicKey
         };
 
         // Sign vote

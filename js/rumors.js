@@ -80,7 +80,9 @@ class RumorManager {
             signature: signature,
             // SYBIL DEFENSE
             deviceId: identityManager.fingerprint,
-            ipHash: identityManager.ipHash
+            ipHash: identityManager.ipHash,
+            // KEY PROPAGATION (Required for validation since ID != Key)
+            publicKey: identityManager.identity.publicKey
         };
         await storage.put('votes', autoVote);
         if (votingManager && votingManager.votes) {
