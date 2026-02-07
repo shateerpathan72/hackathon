@@ -12,9 +12,6 @@ class P2PManager {
             // Create PeerJS instance with user ID as peer ID
             this.myPeerId = `rumorality-${userId}`;
 
-            // Create PeerJS instance with user ID as peer ID
-            this.myPeerId = `rumorality-${userId}`;
-
             this.peer = new Peer(this.myPeerId, {
                 debug: 2,
                 secure: true, // Force HTTPS
