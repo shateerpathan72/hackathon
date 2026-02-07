@@ -109,54 +109,63 @@ class P2PManager {
     }
 
     startPeerDiscovery() {
-        // Register ourselves in the peer registry
+        // Register ourselves with the cloud peer registry
         this.registerPeer();
 
-        // Try connecting to peers every 5 seconds
+        // Re-register every 30 seconds to stay active
         setInterval(() => {
+            if (this.isConnected) {
+                this.registerPeer();
+            }
+        }, 30000);
+
+        // Try connecting to peers every 5 seconds
+        setInterval(async () => {
             if (!this.isConnected) return;
 
-            // Get all registered peers
-            const potentialPeers = this.getRegisteredPeers();
+            // Get all registered peers from cloud
+            const potentialPeers = await this.getRegisteredPeers();
 
             potentialPeers.forEach(peerId => {
                 if (!this.connections.has(peerId) && peerId !== this.myPeerId) {
                     this.connectToPeer(peerId);
                 }
             });
-        }, 5000); // Reduced to 5 seconds for faster discovery
+        }, 5000);
     }
 
-    registerPeer() {
-        // Store our peer ID in a shared registry
-        // Note: This uses localStorage which is per-origin, so it works across tabs
-        // For true cross-device discovery, we'd need a signaling server
+    async registerPeer() {
+        // Register with cloud peer registry
         try {
-            const registry = this.getPeerRegistry();
-            if (!registry.includes(this.myPeerId)) {
-                registry.push(this.myPeerId);
-                localStorage.setItem('rumorality_peer_registry', JSON.stringify(registry));
-                console.log('P2P: Registered peer', this.myPeerId);
+            const response = await fetch('/api/peers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ peerId: this.myPeerId })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('P2P: Registered with cloud registry. Active peers:', data.activePeers);
             }
         } catch (error) {
-            console.error('P2P: Failed to register peer', error);
+            console.error('P2P: Failed to register with cloud registry', error);
         }
     }
 
-    getPeerRegistry() {
+    async getRegisteredPeers() {
+        // Get peers from cloud registry
         try {
-            const registry = localStorage.getItem('rumorality_peer_registry');
-            return registry ? JSON.parse(registry) : [];
+            const response = await fetch('/api/peers');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('P2P: Found peers in registry:', data.peers);
+                return data.peers;
+            }
         } catch (error) {
-            return [];
+            console.error('P2P: Failed to fetch peers from registry', error);
         }
-    }
 
-    getRegisteredPeers() {
-        // Get peers from registry
-        const registryPeers = this.getPeerRegistry();
-
-        // Also try peers from rumors we've seen
+        // Fallback: try peers from rumors we've seen
         const rumorPeers = [];
         rumorManager.rumors.forEach(rumor => {
             const authorPeerId = `rumorality-${rumor.authorId}`;
@@ -165,8 +174,7 @@ class P2PManager {
             }
         });
 
-        // Combine both sources
-        return [...new Set([...registryPeers, ...rumorPeers])];
+        return rumorPeers;
     }
 
     generatePotentialPeerIds() {
