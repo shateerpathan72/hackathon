@@ -266,180 +266,181 @@ class IdentityManager {
         );
         return keyPair;
     }
+    async getIpHash() {
         try {
-    // Fetch public IP from a free API
-    const response = await fetch('https://api.ipify.org?format=json');
-    const data = await response.json();
-    const ip = data.ip;
+            // Fetch public IP from a free API
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+            const ip = data.ip;
 
-    // COMPOSITE FINGERPRINT (Heuristic)
-    // Combine IP with hardware traits to distinguish devices on same WiFi
-    // but link browsers on the same device.
-    const components = [
-        ip,                              // Network
-        navigator.platform,              // OS (e.g. Win32, MacIntel)
-        screen.width + 'x' + screen.height, // Screen Resolution (Hardware)
-        navigator.hardwareConcurrency || 1, // CPU Cores
-        navigator.deviceMemory || 'unknown' // RAM (if available)
-    ];
+            // COMPOSITE FINGERPRINT (Heuristic)
+            // Combine IP with hardware traits to distinguish devices on same WiFi
+            // but link browsers on the same device.
+            const components = [
+                ip,                              // Network
+                navigator.platform,              // OS (e.g. Win32, MacIntel)
+                screen.width + 'x' + screen.height, // Screen Resolution (Hardware)
+                navigator.hardwareConcurrency || 1, // CPU Cores
+                navigator.deviceMemory || 'unknown' // RAM (if available)
+            ];
 
-    const compositeString = components.join('|') + "RUMORALITY_SALT";
+            const compositeString = components.join('|') + "RUMORALITY_SALT";
 
-    // Hash the composite string
-    const encoder = new TextEncoder();
-    const dataBuffer = encoder.encode(compositeString);
-    const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            // Hash the composite string
+            const encoder = new TextEncoder();
+            const dataBuffer = encoder.encode(compositeString);
+            const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    console.log('Network-Device Hash:', hashHex.substring(0, 8) + '...');
-    return hashHex;
-} catch (error) {
-    console.error('Failed to fetch/hash IP:', error);
-    // Fallback: If IP fetch fails, return null (rely on FingerprintJS)
-    return null;
-}
+            console.log('Network-Device Hash:', hashHex.substring(0, 8) + '...');
+            return hashHex;
+        } catch (error) {
+            console.error('Failed to fetch/hash IP:', error);
+            // Fallback: If IP fetch fails, return null (rely on FingerprintJS)
+            return null;
+        }
     }
 
     async detectIncognito() {
-    // Heuristic 1: Storage Quota
-    // Incognito mode often has a specific, lower storage quota cap (e.g. 100MB or 120MB)
-    // compared to the massive quota of normal browsing (10%+ of disk).
-    if ('storage' in navigator && 'estimate' in navigator.storage) {
-        try {
-            const { quota } = await navigator.storage.estimate();
-            // If quota is less than 150MB, it's highly likely Incognito
-            // (Normal Chrome usually gives 10s or 100s of GB)
-            if (quota < 150 * 1024 * 1024) {
-                return true;
+        // Heuristic 1: Storage Quota
+        // Incognito mode often has a specific, lower storage quota cap (e.g. 100MB or 120MB)
+        // compared to the massive quota of normal browsing (10%+ of disk).
+        if ('storage' in navigator && 'estimate' in navigator.storage) {
+            try {
+                const { quota } = await navigator.storage.estimate();
+                // If quota is less than 150MB, it's highly likely Incognito
+                // (Normal Chrome usually gives 10s or 100s of GB)
+                if (quota < 150 * 1024 * 1024) {
+                    return true;
+                }
+            } catch (e) {
+                console.log('Quota check failed', e);
             }
-        } catch (e) {
-            console.log('Quota check failed', e);
         }
-    }
-    return false;
-}
-
-    async signMessage(message) {
-    // Import private key
-    const privateKey = await window.crypto.subtle.importKey(
-        'jwk',
-        this.identity.privateKey,
-        { name: 'ECDSA', namedCurve: 'P-256' },
-        false,
-        ['sign']
-    );
-
-    // Sign message
-    const encoder = new TextEncoder();
-    const data = encoder.encode(JSON.stringify(message));
-    const signature = await window.crypto.subtle.sign(
-        { name: 'ECDSA', hash: 'SHA-256' },
-        privateKey,
-        data
-    );
-
-    return this.bufferToHex(signature);
-}
-
-    async verifySignature(message, signature, publicKeyJwk) {
-    try {
-        // Import public key
-        const publicKey = await window.crypto.subtle.importKey(
-            'jwk',
-            publicKeyJwk,
-            { name: 'ECDSA', namedCurve: 'P-256' },
-            false,
-            ['verify']
-        );
-
-        // Verify signature
-        const encoder = new TextEncoder();
-        const data = encoder.encode(JSON.stringify(message));
-        const signatureBuffer = this.hexToBuffer(signature);
-
-        return await window.crypto.subtle.verify(
-            { name: 'ECDSA', hash: 'SHA-256' },
-            publicKey,
-            signatureBuffer,
-            data
-        );
-    } catch (error) {
-        console.error('Signature verification failed:', error);
         return false;
     }
-}
 
-isNewAccount() {
-    if (!CONFIG.ENABLE_COOLDOWN) return false;
+    async signMessage(message) {
+        // Import private key
+        const privateKey = await window.crypto.subtle.importKey(
+            'jwk',
+            this.identity.privateKey,
+            { name: 'ECDSA', namedCurve: 'P-256' },
+            false,
+            ['sign']
+        );
 
-    const accountAge = Date.now() - this.identity.createdAt;
-    const cooldownPeriod = CONFIG.COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
-    return accountAge < cooldownPeriod;
-}
+        // Sign message
+        const encoder = new TextEncoder();
+        const data = encoder.encode(JSON.stringify(message));
+        const signature = await window.crypto.subtle.sign(
+            { name: 'ECDSA', hash: 'SHA-256' },
+            privateKey,
+            data
+        );
 
-getUserId() {
-    return this.identity ? this.identity.userId : null;
-}
+        return this.bufferToHex(signature);
+    }
+
+    async verifySignature(message, signature, publicKeyJwk) {
+        try {
+            // Import public key
+            const publicKey = await window.crypto.subtle.importKey(
+                'jwk',
+                publicKeyJwk,
+                { name: 'ECDSA', namedCurve: 'P-256' },
+                false,
+                ['verify']
+            );
+
+            // Verify signature
+            const encoder = new TextEncoder();
+            const data = encoder.encode(JSON.stringify(message));
+            const signatureBuffer = this.hexToBuffer(signature);
+
+            return await window.crypto.subtle.verify(
+                { name: 'ECDSA', hash: 'SHA-256' },
+                publicKey,
+                signatureBuffer,
+                data
+            );
+        } catch (error) {
+            console.error('Signature verification failed:', error);
+            return false;
+        }
+    }
+
+    isNewAccount() {
+        if (!CONFIG.ENABLE_COOLDOWN) return false;
+
+        const accountAge = Date.now() - this.identity.createdAt;
+        const cooldownPeriod = CONFIG.COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
+        return accountAge < cooldownPeriod;
+    }
+
+    getUserId() {
+        return this.identity ? this.identity.userId : null;
+    }
 
     // Helper functions
     async hashString(str) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(str);
+        const encoder = new TextEncoder();
+        const data = encoder.encode(str);
 
-    // Check if crypto.subtle is available (requires HTTPS on mobile)
-    if (window.crypto && window.crypto.subtle) {
-        return await window.crypto.subtle.digest('SHA-256', data);
-    } else {
-        // Fallback for HTTP connections (simple hash)
-        console.warn('Web Crypto API not available, using fallback hash');
-        return this.simpleHash(str);
+        // Check if crypto.subtle is available (requires HTTPS on mobile)
+        if (window.crypto && window.crypto.subtle) {
+            return await window.crypto.subtle.digest('SHA-256', data);
+        } else {
+            // Fallback for HTTP connections (simple hash)
+            console.warn('Web Crypto API not available, using fallback hash');
+            return this.simpleHash(str);
+        }
     }
-}
 
     async hashBuffer(buffer) {
-    if (window.crypto && window.crypto.subtle) {
-        return await window.crypto.subtle.digest('SHA-256', buffer);
-    } else {
-        // Fallback
-        const str = new TextDecoder().decode(buffer);
-        return this.simpleHash(str);
-    }
-}
-
-// Simple hash fallback for non-HTTPS
-simpleHash(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
+        if (window.crypto && window.crypto.subtle) {
+            return await window.crypto.subtle.digest('SHA-256', buffer);
+        } else {
+            // Fallback
+            const str = new TextDecoder().decode(buffer);
+            return this.simpleHash(str);
+        }
     }
 
-    // Convert to hex-like format
-    const hex = Math.abs(hash).toString(16).padStart(16, '0');
+    // Simple hash fallback for non-HTTPS
+    simpleHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
 
-    // Return as ArrayBuffer-like for compatibility
-    const bytes = new Uint8Array(16);
-    for (let i = 0; i < 16; i++) {
-        bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+        // Convert to hex-like format
+        const hex = Math.abs(hash).toString(16).padStart(16, '0');
+
+        // Return as ArrayBuffer-like for compatibility
+        const bytes = new Uint8Array(16);
+        for (let i = 0; i < 16; i++) {
+            bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+        }
+        return bytes.buffer;
     }
-    return bytes.buffer;
-}
 
-bufferToHex(buffer) {
-    return Array.from(new Uint8Array(buffer))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-}
-
-hexToBuffer(hex) {
-    const bytes = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < hex.length; i += 2) {
-        bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+    bufferToHex(buffer) {
+        return Array.from(new Uint8Array(buffer))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
     }
-    return bytes.buffer;
-}
+
+    hexToBuffer(hex) {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) {
+            bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+        }
+        return bytes.buffer;
+    }
 }
 
 // Global identity manager
