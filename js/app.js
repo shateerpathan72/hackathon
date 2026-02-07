@@ -36,6 +36,10 @@ class App {
             await p2pManager.init(identityManager.getUserId());
             console.log('✓ P2P network initialized');
 
+            // Initialize dashboard
+            await dashboardManager.init();
+            console.log('✓ Dashboard initialized');
+
             // Setup UI
             this.setupEventListeners();
             updateBalance();

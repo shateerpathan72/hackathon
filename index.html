@@ -13,10 +13,22 @@
     <header class="header">
         <div class="container">
             <h1 class="logo">🍥 Rumorality</h1>
-            <div class="wallet">
-                <span class="wallet-label">Reputation</span>
-                <span class="wallet-balance" id="balance">100</span>
-                <span class="wallet-icon">⭐</span>
+            <div class="header-right">
+                <div class="credibility-badge" onclick="openDashboard()">
+                    <span>📊</span>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Credibility</div>
+                        <div class="credibility-score" id="headerCredibility">85</div>
+                    </div>
+                </div>
+                <div class="wallet">
+                    <span class="wallet-label">Reputation</span>
+                    <span class="wallet-balance" id="balance">100</span>
+                    <span class="wallet-icon">⭐</span>
+                </div>
+                <button class="dashboard-toggle" onclick="openDashboard()">
+                    My Dashboard
+                </button>
             </div>
         </div>
     </header>
@@ -119,6 +131,101 @@
         <span class="peer-count">0 peers</span>
     </div>
 
+    <!-- User Dashboard Modal -->
+    <div id="dashboardModal" class="dashboard-modal">
+        <div class="dashboard-content">
+            <div class="dashboard-close" onclick="closeDashboard()">&times;</div>
+
+            <div class="dashboard-header">
+                <h2>📊 Your Performance Dashboard</h2>
+                <p style="color: var(--text-muted);">Track your credibility, voting history, and reputation</p>
+            </div>
+
+            <!-- Main Stats Grid -->
+            <div class="dashboard-grid">
+                <!-- Credibility Score Card -->
+                <div class="dashboard-card">
+                    <h3>🎯 Credibility Score</h3>
+                    <div class="credibility-circle">
+                        <svg width="200" height="200">
+                            <defs>
+                                <linearGradient id="credibilityGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#9B8BC4;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#7C6FA0;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <circle class="circle-bg" cx="100" cy="100" r="85"></circle>
+                            <circle id="credibilityCircle" class="circle-progress" cx="100" cy="100" r="85"
+                                stroke-dasharray="534" stroke-dashoffset="134"></circle>
+                        </svg>
+                        <div class="circle-text">
+                            <div class="circle-score" id="dashboardCredibility">85</div>
+                            <div class="circle-label">/ 100</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">Breakdown:
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                            <div>💰 Balance: <span id="credBalanceContrib">70%</span></div>
+                            <div>⏰ Account Age: <span id="credAgeContrib">20%</span></div>
+                            <div>🎯 Win Rate: <span id="credWinRateContrib">10%</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="dashboard-card">
+                    <h3>📈 Quick Stats</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-box-value" id="totalVotesCount">0</div>
+                            <div class="stat-box-label">Total Votes</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-value" id="totalRumorsCount">0</div>
+                            <div class="stat-box-label">Rumors Posted</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-value" style="color: var(--success);" id="votesWonCount">0</div>
+                            <div class="stat-box-label">Votes Won</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-value" style="color: var(--danger);" id="votesLostCount">0</div>
+                            <div class="stat-box-label">Votes Lost</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1.5rem;">
+                        <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">Win Rate</div>
+                        <div class="win-rate-bar">
+                            <div class="win-rate-fill" id="winRateFill" style="width: 0%">
+                                <span id="winRateText">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voting History -->
+            <div class="dashboard-card" style="margin-top: 2rem;">
+                <h3>📜 Voting History</h3>
+                <div class="vote-history" id="voteHistoryList">
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        No voting history yet. Start voting to see your track record!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Credibility History Graph -->
+            <div class="dashboard-card" style="margin-top: 2rem;">
+                <h3>📊 Credibility Over Time</h3>
+                <div class="credibility-graph">
+                    <canvas id="credibilityChart" class="graph-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <!-- PeerJS for WebRTC P2P -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -131,6 +238,7 @@
     <script src="js/voting.js"></script>
     <script src="js/consensus.js"></script>
     <script src="js/p2p.js"></script>
+    <script src="js/dashboard.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/app.js"></script>
 </body>
