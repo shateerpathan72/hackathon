@@ -47,6 +47,16 @@
                     maxlength="280"></textarea>
                 <div class="post-footer">
                     <span class="char-count" id="charCount">0/280</span>
+
+                    <div style="margin-left: auto; margin-right: 1rem;">
+                        <select id="rumorDuration" class="duration-select"
+                            style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 5px; border-radius: 5px;">
+                            <option value="12">Ends in 12h</option>
+                            <option value="24" selected>Ends in 24h</option>
+                            <option value="48">Ends in 48h</option>
+                        </select>
+                    </div>
+
                     <button class="btn-primary" id="postBtn">
                         Post Rumor (Stake 10⭐)
                     </button>
